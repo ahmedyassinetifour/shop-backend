@@ -1,0 +1,707 @@
+{
+  "info": {
+    "name": "Fanuna Shop API",
+    "description": "Saved and runnable requests for the Fanuna shop backend. Select the Fanuna Local API environment and start the local server at http://localhost:3000 before sending requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth & JWT",
+      "item": [
+        {
+          "name": "Register account",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get('testEmail')) {",
+                  "  pm.environment.set('testEmail', 'fanuna.postman.test+' + Date.now() + '@example.com');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Registration returns an expected status', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([201, 400, 409]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "id": "503714fc-9aa2-455b-a56e-ab61adb880aa",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Postman Test User\",\"email\":\"{{testEmail}}\",\"password\":\"{{testPassword}}\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "One request for registration cases. Valid name/email/password → 201. Resend the same email → 409. Edit the body to omit a field or use an invalid email/password → 400."
+          },
+          "response": [],
+          "createdAt": "2026-11-09T00:44:11.000Z",
+          "updatedAt": "2026-11-09T00:50:46.000Z",
+          "uid": "29019193-503714fc-9aa2-455b-a56e-ab61adb880aa"
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login returns an expected status', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 400, 401, 429]);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.token).to.be.a('string').and.not.empty;",
+                  "  pm.expect(body.user).not.to.have.property('passwordHash');",
+                  "  pm.environment.set('authToken', body.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "id": "9f609442-d92e-4938-ae79-709b7e90be98",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{testEmail}}\",\"password\":\"{{testPassword}}\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "One request for login cases. Correct credentials → 200 and saves authToken. Change the password → 401. Remove a field → 400. Repeated attempts can demonstrate the login rate limit (429)."
+          },
+          "response": [],
+          "createdAt": "2026-11-09T00:44:38.000Z",
+          "updatedAt": "2026-11-09T00:50:53.000Z",
+          "uid": "29019193-9f609442-d92e-4938-ae79-709b7e90be98"
+        }
+      ],
+      "id": "c104868f-2a64-404f-9cf9-2922b3af365e",
+      "createdAt": "2026-11-09T00:41:22.000Z",
+      "updatedAt": "2026-11-09T00:48:16.000Z",
+      "uid": "29019193-c104868f-2a64-404f-9cf9-2922b3af365e"
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "List active categories",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Public categories return active category data', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const categories = pm.response.json();",
+                  "  pm.expect(categories).to.be.an('array');",
+                  "  pm.expect(categories.length).to.be.greaterThan(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "id": "f4ee433c-f925-489b-96fa-4f38ae7e805a",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "categories"
+              ]
+            },
+            "description": "Public list of active categories (200). Resend after deactivating a category to check it is omitted. Repeated sends can also demonstrate the general API rate limit (429)."
+          },
+          "response": [],
+          "createdAt": "2026-11-09T00:45:06.000Z",
+          "updatedAt": "2026-11-09T00:53:12.000Z",
+          "uid": "29019193-f4ee433c-f925-489b-96fa-4f38ae7e805a"
+        },
+        {
+          "name": "List all categories",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Returns an expected authorization status', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 401]);",
+                  "});",
+                  "if (pm.response.code === 200) pm.expect(pm.response.json()).to.be.an('array');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "id": "6a0f1abb-1253-4564-906b-c9a40ae3aa78",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "categories"
+              ]
+            },
+            "description": "One request for protected category listing. Valid app JWT or provider OAuth access token → 200. Remove Authorization or replace the token with an invalid one → 401. Resend after creating a product linked to a category to inspect products_count. For OAuth, use an access token in authToken (not an OIDC ID token)."
+          },
+          "response": [],
+          "createdAt": "2026-11-09T00:45:10.000Z",
+          "updatedAt": "2026-11-09T00:53:08.000Z",
+          "uid": "29019193-6a0f1abb-1253-4564-906b-c9a40ae3aa78"
+        },
+        {
+          "name": "Create category",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get('testCategoryName')) {",
+                  "  pm.environment.set('testCategoryName', 'Postman Check ' + Date.now());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Create category returns an expected status', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([201, 400, 401, 409]);",
+                  "});",
+                  "if (pm.response.code === 201) pm.environment.set('testCategoryId', pm.response.json().id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "id": "cb4b4b95-0560-4edf-8c62-71b624472742",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"{{testCategoryName}}\",\"description\":\"Temporary Postman collection check\",\"is_active\":true,\"sort_order\":99}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "categories"
+              ]
+            },
+            "description": "One request for category creation cases. Valid body → 201. Resend unchanged for duplicate name → 409. Change name to empty or use invalid field values → 400. Remove/alter Authorization to test 401."
+          },
+          "response": [],
+          "createdAt": "2026-11-09T00:45:15.000Z",
+          "updatedAt": "2026-11-09T00:53:04.000Z",
+          "uid": "29019193-cb4b4b95-0560-4edf-8c62-71b624472742"
+        },
+        {
+          "name": "Get category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Get category returns an expected status', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 400, 401, 404]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "id": "093bfe50-cb19-4722-9303-c4fedc5e5358",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/categories/{{testCategoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "categories",
+                "{{testCategoryId}}"
+              ]
+            },
+            "description": "One request for category reads. Use testCategoryId → 200; change it to malformed text → 400, or a valid unknown ObjectId → 404. Remove/alter Authorization to test 401."
+          },
+          "response": [],
+          "createdAt": "2026-11-09T00:45:18.000Z",
+          "updatedAt": "2026-11-09T00:51:06.000Z",
+          "uid": "29019193-093bfe50-cb19-4722-9303-c4fedc5e5358"
+        },
+        {
+          "name": "Update category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Update category returns an expected status', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 400, 401, 404]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "id": "919eaad6-f516-4292-89c8-f01517e02a69",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"description\":\"Updated by Postman\",\"sort_order\":100}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/categories/{{testCategoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "categories",
+                "{{testCategoryId}}"
+              ]
+            },
+            "description": "One request for category updates. Default payload updates description/order (200). Add is_active:false and resend to test hiding inactive categories, then set it back to true. Invalid fields → 400; bad/unknown ID → 400/404; missing/invalid token → 401."
+          },
+          "response": [],
+          "createdAt": "2026-11-09T00:53:22.000Z",
+          "updatedAt": "2026-11-09T00:56:20.000Z",
+          "uid": "29019193-919eaad6-f516-4292-89c8-f01517e02a69"
+        },
+        {
+          "name": "Delete category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Delete category returns an expected status', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 400, 401, 404]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "id": "acfd8155-5359-478c-803f-b54480f14fa7",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/categories/{{testCategoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "categories",
+                "{{testCategoryId}}"
+              ]
+            },
+            "description": "One request for category deletion. Run after Create product to test unlinking: 200 deletes the category and clears its products' category_id. Change ID to malformed/unknown values for 400/404, or remove/alter Authorization for 401."
+          },
+          "response": [],
+          "createdAt": "2026-11-09T00:53:38.000Z",
+          "updatedAt": "2026-11-09T01:00:43.000Z",
+          "uid": "29019193-acfd8155-5359-478c-803f-b54480f14fa7"
+        }
+      ],
+      "id": "ae60334f-5738-4b5d-91f0-861319825301",
+      "createdAt": "2026-11-09T00:41:18.000Z",
+      "updatedAt": "2026-11-09T01:00:43.000Z",
+      "uid": "29019193-ae60334f-5738-4b5d-91f0-861319825301"
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "List products",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Product list returns data', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const products = pm.response.json();",
+                  "  pm.expect(products).to.be.an('array').and.not.empty;",
+                  "  pm.environment.set('sampleProductId', products[0].id);",
+                  "  pm.environment.set('sampleCategoryId', products[0].category_id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "id": "83a6b1d2-00d3-4b92-9a7d-490fb608314f",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
+            },
+            "description": "Public product catalog. Expected 200. The script saves the first product ID and category ID for the next requests."
+          },
+          "response": [],
+          "createdAt": "2026-11-09T00:51:59.000Z",
+          "updatedAt": "2026-11-09T00:51:59.000Z",
+          "uid": "29019193-83a6b1d2-00d3-4b92-9a7d-490fb608314f"
+        },
+        {
+          "name": "Get product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Product detail returns an expected status', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 400, 404]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "id": "2bb0c20d-cfdb-4ad9-b3b2-c0fc3ee11fc7",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{sampleProductId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "{{sampleProductId}}"
+              ]
+            },
+            "description": "One request for product detail. Use sampleProductId for 200; change the ID to malformed text for 400 or a valid unknown ObjectId for 404. After deleting the temporary product, put testProductId here and resend to see 404."
+          },
+          "response": [],
+          "createdAt": "2026-11-09T00:52:08.000Z",
+          "updatedAt": "2026-11-09T00:52:08.000Z",
+          "uid": "29019193-2bb0c20d-cfdb-4ad9-b3b2-c0fc3ee11fc7"
+        },
+        {
+          "name": "Create product",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set('testProductName', 'Postman Product ' + Date.now());"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Create product returns an expected status', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([201, 400, 401]);",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "  const product = pm.response.json();",
+                  "  pm.environment.set('testProductId', product.id);",
+                  "  pm.test('Product links to the selected category', function () {",
+                  "    pm.expect(product.category_id).to.eql(pm.environment.get('testCategoryId'));",
+                  "    pm.expect(product.category).to.eql(pm.environment.get('testCategoryName'));",
+                  "  });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "id": "75bb7999-8129-4e9f-8da8-2d9effc65029",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"{{testProductName}}\",\"description\":\"Temporary Postman request-check product\",\"price\":123,\"category_id\":\"{{testCategoryId}}\",\"imageUrl\":\"https://example.com/postman-test.jpg\",\"stock\":2,\"featured\":false}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
+            },
+            "description": "One request for product creation. Default payload creates a product linked to testCategoryId. Expected 201. Edit name/price/category/image/stock for validation cases (400), or remove/alter Authorization for 401."
+          },
+          "response": [],
+          "createdAt": "2026-11-09T00:52:22.000Z",
+          "updatedAt": "2026-11-09T00:52:22.000Z",
+          "uid": "29019193-75bb7999-8129-4e9f-8da8-2d9effc65029"
+        },
+        {
+          "name": "Update product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Update product returns an expected status', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 400, 401, 404]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "id": "0284d8cf-74bd-4b80-900f-12edca6a8305",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"{{testProductName}} Updated\",\"price\":125,\"category_id\":\"{{testCategoryId}}\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{testProductId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "{{testProductId}}"
+              ]
+            },
+            "description": "One request for product updates. Default payload changes name/price and keeps the test category link for the category-delete check (200). Change category_id to another ID or use category:'Bags' to test reassignment; remove fields or use invalid values for 400; alter ID/token for 400/401/404."
+          },
+          "response": [],
+          "createdAt": "2026-11-09T00:52:33.000Z",
+          "updatedAt": "2026-11-09T00:56:16.000Z",
+          "uid": "29019193-0284d8cf-74bd-4b80-900f-12edca6a8305"
+        },
+        {
+          "name": "Delete product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Delete product returns an expected status', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 400, 401, 404]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "id": "56c64ff1-928f-4a7c-9dd6-13dde820b414",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{testProductId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "{{testProductId}}"
+              ]
+            },
+            "description": "One request for product deletion. Valid testProductId → 200. Resend after deletion to get 404; edit the ID for malformed 400. Remove/alter Authorization to check 401."
+          },
+          "response": [],
+          "createdAt": "2026-11-09T00:53:42.000Z",
+          "updatedAt": "2026-11-09T00:53:42.000Z",
+          "uid": "29019193-56c64ff1-928f-4a7c-9dd6-13dde820b414"
+        }
+      ],
+      "id": "0f1b5b24-6553-413a-8637-14c9bb9e381d",
+      "createdAt": "2026-11-09T00:41:36.000Z",
+      "updatedAt": "2026-11-09T01:00:43.000Z",
+      "uid": "29019193-0f1b5b24-6553-413a-8637-14c9bb9e381d"
+    },
+    {
+      "name": "Security & Rate Limits",
+      "item": [
+        {
+          "name": "Health check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Health returns 200 or rate limit 429', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 429]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "id": "4743ad02-57ef-4bd0-95b4-6dff3baa486c",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            },
+            "description": "Health endpoint; expect 200. Repeated sends can demonstrate the general 100-requests/15-minute limit by eventually returning 429."
+          },
+          "response": [],
+          "createdAt": "2026-11-09T00:53:51.000Z",
+          "updatedAt": "2026-11-09T00:53:51.000Z",
+          "uid": "29019193-4743ad02-57ef-4bd0-95b4-6dff3baa486c"
+        }
+      ],
+      "id": "fb397c61-7fd4-4834-92f2-5463fab8537f",
+      "createdAt": "2026-11-09T00:41:47.000Z",
+      "updatedAt": "2026-11-09T00:53:51.000Z",
+      "uid": "29019193-fb397c61-7fd4-4834-92f2-5463fab8537f"
+    }
+  ]
+}
+
